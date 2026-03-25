@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test Mini-App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        .status {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 8px 0;
+        }
+        .btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        .btn.secondary {
+            background: #2196F3;
+        }
+        .btn.secondary:hover {
+            background: #1976D2;
+        }
+        .logs {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Simple Test Mini-App</h1>
+            <p>Testing Mini-App Loading</p>
+        </div>
+
+        <div class="status">
+            ✅ Mini-App Loaded Successfully!
+        </div>
+
+        <div class="section">
+            <div class="section-title">📱 Mini-App Info</div>
+            <p><strong>App ID:</strong> <span id="appId">Loading...</span></p>
+            <p><strong>URL:</strong> <span id="currentUrl">Loading...</span></p>
+            <p><strong>User Agent:</strong> <span id="userAgent">Loading...</span></p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🔗 Bridge Testing</div>
+            <button class="btn" onclick="testBridge()">Test Host Bridge</button>
+            <button class="btn secondary" onclick="testNativeBridge()">Test Native Bridge</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">💾 Storage Testing</div>
+            <div class="form-group">
+                <label for="testKey">Test Key:</label>
+                <input type="text" id="testKey" placeholder="Enter key" value="test_data">
+            </div>
+            <div class="form-group">
+                <label for="testValue">Test Value:</label>
+                <input type="text" id="testValue" placeholder="Enter value" value="Hello from Mini-App!">
+            </div>
+            <button class="btn" onclick="testStorage()">Test Local Storage</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">🎨 UI Testing</div>
+            <button class="btn" onclick="showAlert()">Show Alert</button>
+            <button class="btn secondary" onclick="updateContent()">Update Content</button>
+        </div>
+
+        <div id="logs" class="logs">
+            <div><strong>🚀 Mini-App Logs:</strong></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock MiniApp SDK for testing
+        const MiniApp = {
+            init: function(config) {
+                return Promise.resolve();
+            },
+            onLaunch: function(callback) {
+                log('🎯 Mini-App launched');
+                if (callback) callback();
+            },
+            onShow: function(callback) {
+                log('👁️ Mini-App shown');
+                if (callback) callback();
+            },
+            onHide: function(callback) {
+                log('🙈 Mini-App hidden');
+                if (callback) callback();
+            },
+            onClose: function(callback) {
+                log('👋 Mini-App closed');
+                if (callback) callback();
+            },
+            auth: {
+                login: function() {
+                    return Promise.resolve({
+                        id: 'test_user_123',
+                        name: 'Test User',
+                        email: 'test@example.com',
+                        token: 'mock_jwt_token'
+                    });
+                }
+            },
+            storage: {
+                setItem: function(key, value) {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return Promise.resolve(true);
+                },
+                getItem: function(key) {
+                    const value = localStorage.getItem(key);
+                    return Promise.resolve(value ? JSON.parse(value) : null);
+                },
+                removeItem: function(key) {
+                    localStorage.removeItem(key);
+                    return Promise.resolve(true);
+                }
+            },
+            ui: {
+                showModal: function(options) {
+                    alert(options.title + '\n\n' + options.content);
+                    return Promise.resolve({action: 'confirmed'});
+                },
+                toast: function(message) {
+                    log('🍞 Toast: ' + message);
+                    return Promise.resolve();
+                }
+            }
+        };
+
+        // Helper functions
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.innerHTML += '<div>[' + timestamp + '] ' + message + '</div>';
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Initialize Mini-App
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Mini-App loaded successfully');
+            
+            // Set app info
+            document.getElementById('appId').textContent = 'com.echat.testapp';
+            document.getElementById('currentUrl').textContent = window.location.href;
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 50) + '...';
+            
+            // Initialize SDK
+            MiniApp.init({
+                appId: 'com.echat.testapp',
+                permissions: ['storage', 'ui.modal']
+            }).then(() => {
+                log('✅ Mock SDK initialized');
+                MiniApp.onLaunch();
+            });
+        });
+
+        // Test functions
+        function testBridge() {
+            log('🔗 Testing host bridge...');
+            
+            // Try to communicate with host
+            if (window.flutter_inappwebview) {
+                log('✅ Flutter WebView detected');
+                window.flutter_inappwebview.callHandler('testBridge', {
+                    message: 'Hello from Mini-App!',
+                    timestamp: Date.now()
+                }).then(result => {
+                    log('✅ Bridge response: ' + JSON.stringify(result));
+                }).catch(error => {
+                    log('❌ Bridge error: ' + error.message);
+                });
+            } else {
+                log('⚠️ No Flutter WebView detected, using mock');
+                log('📞 Mock bridge call: testBridge');
+            }
+        }
+
+        function testNativeBridge() {
+            log('🔗 Testing native bridge...');
+            
+            // Try different bridge methods
+            if (window.MiniAppNativeBridge) {
+                log('✅ MiniAppNativeBridge detected');
+                // This would be handled by the Flutter WebView
+                log('📞 Native bridge call ready');
+            } else if (window.webkit && window.webkit.messageHandlers) {
+                log('✅ WebKit message handlers detected');
+                log('📞 WebKit bridge call ready');
+            } else {
+                log('⚠️ No native bridge detected, using mock');
+                log('📞 Mock native bridge call');
+            }
+        }
+
+        function testStorage() {
+            const key = document.getElementById('testKey').value;
+            const value = document.getElementById('testValue').value;
+            
+            if (!key || !value) {
+                log('❌ Please enter both key and value');
+                return;
+            }
+
+            log('💾 Testing storage: ' + key);
+            
+            // Use mock SDK storage
+            MiniApp.storage.setItem(key, {
+                value: value,
+                timestamp: Date.now()
+            }).then(() => {
+                log('✅ Storage set successful');
+                return MiniApp.storage.getItem(key);
+            }).then(data => {
+                log('✅ Storage get successful: ' + JSON.stringify(data));
+            }).catch(error => {
+                log('❌ Storage error: ' + error.message);
+            });
+        }
+
+        function showAlert() {
+            log('🎨 Showing alert...');
+            MiniApp.ui.showModal({
+                title: 'Test Modal',
+                content: 'This is a test modal from the Mini-App!'
+            }).then(result => {
+                log('✅ Modal closed: ' + JSON.stringify(result));
+            });
+        }
+
+        function updateContent() {
+            log('🎨 Updating content...');
+            const status = document.querySelector('.status');
+            status.innerHTML = '🔄 Content Updated at ' + new Date().toLocaleTimeString();
+            status.style.background = 'rgba(33, 150, 243, 0.2)';
+            status.style.borderColor = '#2196F3';
+            
+            setTimeout(() => {
+                status.innerHTML = '✅ Mini-App Loaded Successfully!';
+                status.style.background = 'rgba(76, 175, 80, 0.2)';
+                status.style.borderColor = '#4CAF50';
+            }, 2000);
+            
+            log('✅ Content updated successfully');
+        }
+    </script>
+</body>
+</html>

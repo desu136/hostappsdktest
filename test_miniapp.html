@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MiniApp</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 MiniApp Test Suite</h1>
+        <p style="text-align: center; margin-bottom: 20px; opacity: 0.8;">
+            Test your MiniApp Runtime Engine bridge functionality
+        </p>
+
+        <button class="button" onclick="testBridge()">
+            🔗 Test Bridge Connection
+        </button>
+
+        <button class="button" onclick="showToast()">
+            📱 Show Toast Message
+        </button>
+
+        <button class="button" onclick="vibrate()">
+            📳 Vibrate Device
+        </button>
+
+        <button class="button" onclick="getDeviceInfo()">
+            📱 Get Device Info
+        </button>
+
+        <button class="button" onclick="getUserInfo()">
+            👤 Get User Info
+        </button>
+
+        <button class="button" onclick="getHostInfo()">
+            🏠 Get Host Info
+        </button>
+
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Enter custom message..." value="Hello from MiniApp!">
+        </div>
+
+        <button class="button" onclick="sendCustomMessage()">
+            📤 Send Custom Message
+        </button>
+
+        <button class="button" onclick="testShare()">
+            🔗 Test Share Function
+        </button>
+
+        <button class="button" onclick="requestPermissions()">
+            🔐 Request Permissions
+        </button>
+
+        <div class="status" id="status">
+            ✅ Ready to test
+        </div>
+
+        <div class="log" id="log">
+            📋 Bridge messages will appear here...
+        </div>
+    </div>
+
+    <script>
+        // Initialize bridge detection
+        let bridgeAvailable = false;
+        let messageCount = 0;
+
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.background = isError ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)';
+        }
+
+        function addLog(message) {
+            const log = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML = `[${timestamp}] ${message}<br>` + log.innerHTML;
+            messageCount++;
+            
+            // Keep only last 20 messages
+            const lines = log.innerHTML.split('<br>');
+            if (lines.length > 20) {
+                log.innerHTML = lines.slice(0, 20).join('<br>');
+            }
+        }
+
+        function checkBridge() {
+            if (typeof window.MiniAppNativeBridge !== 'undefined') {
+                bridgeAvailable = true;
+                updateStatus('✅ Bridge available');
+                addLog('🔗 Bridge detected and ready');
+                return true;
+            } else {
+                bridgeAvailable = false;
+                updateStatus('❌ Bridge not available', true);
+                addLog('❌ Bridge not detected - check runtime engine');
+                return false;
+            }
+        }
+
+        function testBridge() {
+            if (checkBridge()) {
+                const testData = {
+                    action: 'test',
+                    timestamp: Date.now(),
+                    random: Math.random()
+                };
+                window.MiniAppNativeBridge.testNative(testData);
+                addLog('🧪 Bridge test sent');
+            }
+        }
+
+        function showToast() {
+            if (checkBridge()) {
+                const message = document.getElementById('messageInput').value || 'Hello from MiniApp!';
+                window.MiniAppNativeBridge.showToast(message);
+                addLog(`📱 Toast requested: "${message}"`);
+            }
+        }
+
+        function vibrate() {
+            if (checkBridge()) {
+                window.MiniAppNativeBridge.vibrate();
+                addLog('📳 Vibration requested');
+            }
+        }
+
+        function getDeviceInfo() {
+            if (checkBridge()) {
+                window.MiniAppNativeBridge.getDeviceInfo();
+                addLog('📱 Device info requested');
+            }
+        }
+
+        function getUserInfo() {
+            if (checkBridge()) {
+                window.MiniAppNativeBridge.getUserInfo();
+                addLog('👤 User info requested');
+            }
+        }
+
+        function getHostInfo() {
+            if (checkBridge()) {
+                window.MiniAppNativeBridge.getHostInfo();
+                addLog('🏠 Host info requested');
+            }
+        }
+
+        function sendCustomMessage() {
+            if (checkBridge()) {
+                const message = document.getElementById('messageInput').value || 'Hello from MiniApp!';
+                window.MiniAppNativeBridge.log(message);
+                addLog(`📝 Custom log: "${message}"`);
+            }
+        }
+
+        function testShare() {
+            if (checkBridge()) {
+                const shareData = {
+                    title: 'Test MiniApp',
+                    text: 'Check out this awesome MiniApp!',
+                    url: window.location.href
+                };
+                window.MiniAppNativeBridge.share(shareData);
+                addLog('🔗 Share requested');
+            }
+        }
+
+        function requestPermissions() {
+            if (checkBridge()) {
+                window.MiniAppNativeBridge.requestCamera();
+                window.MiniAppNativeBridge.requestLocation();
+                addLog('🔐 Permissions requested (camera & location)');
+            }
+        }
+
+        // Auto-check bridge on load
+        window.addEventListener('load', () => {
+            setTimeout(checkBridge, 1000);
+            addLog('🚀 MiniApp loaded successfully');
+        });
+
+        // Log all bridge responses (for debugging)
+        if (typeof window !== 'undefined') {
+            const originalLog = console.log;
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                if (args[0] && args[0].includes && args[0].includes('Bridge')) {
+                    addLog(`🔍 Console: ${args.join(' ')}`);
+                }
+            };
+        }
+    </script>
+</body>
+</html>

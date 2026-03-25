@@ -1,0 +1,12 @@
+{
+  "name": "Simple Test Mini-App",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "permissions": [
+    "storage.read",
+    "storage.write",
+    "ui.modal"
+  ],
+  "author": "Echat Developer",
+  "description": "Simple test Mini-App for loading verification"
+}

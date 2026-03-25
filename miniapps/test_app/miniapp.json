@@ -1,0 +1,21 @@
+{
+  "name": "Test Mini-App - Official SDK",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "permissions": [
+    "auth.profile",
+    "device.camera",
+    "device.scanner",
+    "device.location",
+    "device.clipboard",
+    "device.file",
+    "storage.read",
+    "storage.write",
+    "ui.modal",
+    "ui.toast",
+    "payments.request"
+  ],
+  "author": "Echat Developer",
+  "sdk": "@ebisa-tesfaye/miniapp-sdk",
+  "description": "Complete test Mini-App demonstrating official SDK capabilities"
+}

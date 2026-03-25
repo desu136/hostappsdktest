@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mini-App - Official SDK</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        .sdk-status {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .sdk-status.loading {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+        }
+        .sdk-status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+        .form-group {
+            margin: 20px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input::placeholder, .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .form-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 8px 0;
+        }
+        .btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn.secondary {
+            background: #2196F3;
+        }
+        .btn.secondary:hover {
+            background: #1976D2;
+        }
+        .btn.danger {
+            background: #f44336;
+        }
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+        }
+        .logs {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .api-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .user-info h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        .user-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Test Mini-App</h1>
+            <p>Official Mini-App SDK Demo</p>
+        </div>
+
+        <div id="sdkStatus" class="sdk-status loading">
+            Initializing SDK...
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="section">
+            <div class="section-title">🔐 Authentication APIs</div>
+            
+            <button class="btn" onclick="testAuthLogin()">Test Login</button>
+            <button class="btn secondary" onclick="testAuthProfile()">Get Profile</button>
+            <button class="btn secondary" onclick="testAuthToken()">Get Token</button>
+            
+            <div id="userInfo" class="user-info" style="display: none;">
+                <h4>User Profile</h4>
+                <p id="userName"></p>
+                <p id="userId"></p>
+                <p id="userEmail"></p>
+            </div>
+        </div>
+
+        <!-- Device APIs Section -->
+        <div class="section">
+            <div class="section-title">📱 Device APIs</div>
+            
+            <button class="btn" onclick="testCamera()">Test Camera</button>
+            <button class="btn secondary" onclick="testScanner()">Test QR Scanner</button>
+            <button class="btn secondary" onclick="testLocation()">Test Location</button>
+            <button class="btn secondary" onclick="testClipboard()">Test Clipboard</button>
+            <button class="btn secondary" onclick="testFilePicker()">Test File Picker</button>
+        </div>
+
+        <!-- Storage Section -->
+        <div class="section">
+            <div class="section-title">💾 Storage APIs</div>
+            
+            <div class="form-group">
+                <label for="storageKey">Storage Key:</label>
+                <input type="text" id="storageKey" placeholder="storage_key" value="test_data">
+            </div>
+            
+            <div class="form-group">
+                <label for="storageValue">Storage Value:</label>
+                <textarea id="storageValue" placeholder="Value to store">Hello from Mini-App SDK!</textarea>
+            </div>
+            
+            <div class="api-grid">
+                <button class="btn" onclick="testStorageSet()">Set Item</button>
+                <button class="btn secondary" onclick="testStorageGet()">Get Item</button>
+                <button class="btn danger" onclick="testStorageRemove()">Remove Item</button>
+            </div>
+        </div>
+
+        <!-- UI Components Section -->
+        <div class="section">
+            <div class="section-title">🎨 UI Components</div>
+            
+            <div class="form-group">
+                <label for="modalTitle">Modal Title:</label>
+                <input type="text" id="modalTitle" placeholder="Modal Title" value="Test Modal">
+            </div>
+            
+            <div class="form-group">
+                <label for="modalContent">Modal Content:</label>
+                <textarea id="modalContent" placeholder="Modal content">This is a test modal from the Mini-App SDK!</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="toastMessage">Toast Message:</label>
+                <input type="text" id="toastMessage" placeholder="Toast message" value="Hello from SDK!">
+            </div>
+            
+            <div class="api-grid">
+                <button class="btn" onclick="testModal()">Show Modal</button>
+                <button class="btn secondary" onclick="testToast()">Show Toast</button>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="section">
+            <div class="section-title">💳 Payment APIs</div>
+            
+            <div class="form-group">
+                <label for="paymentAmount">Amount (cents):</label>
+                <input type="number" id="paymentAmount" placeholder="599" value="599">
+            </div>
+            
+            <div class="form-group">
+                <label for="paymentCurrency">Currency:</label>
+                <input type="text" id="paymentCurrency" placeholder="USD" value="USD">
+            </div>
+            
+            <div class="form-group">
+                <label for="paymentDescription">Description:</label>
+                <input type="text" id="paymentDescription" placeholder="Coffee" value="Test Payment">
+            </div>
+            
+            <button class="btn" onclick="testPayment()">Test Payment</button>
+        </div>
+
+        <div id="status" class="status info" style="display: none;">
+            Status messages will appear here...
+        </div>
+
+        <div id="logs" class="logs">
+            <div><strong>🚀 Mini-App SDK Logs:</strong></div>
+        </div>
+    </div>
+
+    <!-- Load the official Mini-App SDK -->
+    <script type="module">
+        import { MiniApp } from '../node_modules/@ebisa-tesfaye/miniapp-sdk/index.js';
+        
+        // Global scope for button handlers
+        window.MiniApp = MiniApp;
+        
+        // Initialize SDK
+        async function initializeSDK() {
+            try {
+                log('🚀 Initializing Mini-App SDK...');
+                
+                await MiniApp.init({
+                    appId: "com.echat.testapp",
+                    permissions: [
+                        "auth.profile", 
+                        "device.camera", 
+                        "device.scanner",
+                        "device.location",
+                        "device.clipboard",
+                        "device.file",
+                        "storage.read",
+                        "storage.write",
+                        "ui.modal",
+                        "ui.toast",
+                        "payments.request"
+                    ]
+                });
+                
+                log('✅ SDK initialized successfully!');
+                updateSDKStatus('SDK Ready! All APIs available', 'success');
+                
+                // Set up lifecycle listeners
+                MiniApp.onLaunch(() => {
+                    log('🎯 Mini-App launched');
+                });
+                
+                MiniApp.onShow(() => {
+                    log('👁️ Mini-App shown');
+                });
+                
+                MiniApp.onHide(() => {
+                    log('🙈 Mini-App hidden');
+                });
+                
+                MiniApp.onClose(() => {
+                    log('👋 Mini-App closed');
+                });
+                
+            } catch (error) {
+                log('❌ SDK initialization failed: ' + error.message);
+                updateSDKStatus('SDK initialization failed', 'error');
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeSDK);
+    </script>
+
+    <script>
+        // Helper functions
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.innerHTML += '<div>[' + timestamp + '] ' + message + '</div>';
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function updateSDKStatus(message, type) {
+            const status = document.getElementById('sdkStatus');
+            status.textContent = message;
+            status.className = 'sdk-status ' + type;
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        function updateUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            const userName = document.getElementById('userName');
+            const userId = document.getElementById('userId');
+            const userEmail = document.getElementById('userEmail');
+            
+            if (user) {
+                userName.textContent = 'Name: ' + (user.name || 'N/A');
+                userId.textContent = 'ID: ' + (user.id || 'N/A');
+                userEmail.textContent = 'Email: ' + (user.email || 'N/A');
+                userInfo.style.display = 'block';
+            } else {
+                userInfo.style.display = 'none';
+            }
+        }
+
+        // Authentication API Tests
+        window.testAuthLogin = async function() {
+            try {
+                log('🔐 Testing authentication login...');
+                const user = await MiniApp.auth.login();
+                log('✅ Login successful: ' + JSON.stringify(user));
+                updateUserInfo(user);
+                showStatus('Login successful!', 'success');
+            } catch (error) {
+                log('❌ Login failed: ' + error.message);
+                showStatus('Login failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testAuthProfile = async function() {
+            try {
+                log('👤 Getting user profile...');
+                const profile = await MiniApp.auth.getProfile();
+                log('✅ Profile retrieved: ' + JSON.stringify(profile));
+                updateUserInfo(profile);
+                showStatus('Profile retrieved!', 'success');
+            } catch (error) {
+                log('❌ Profile retrieval failed: ' + error.message);
+                showStatus('Profile retrieval failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testAuthToken = async function() {
+            try {
+                log('🔑 Getting auth token...');
+                const token = await MiniApp.auth.getToken();
+                log('✅ Token retrieved: ' + (token ? '***' + token.slice(-4) : 'null'));
+                showStatus('Token retrieved!', 'success');
+            } catch (error) {
+                log('❌ Token retrieval failed: ' + error.message);
+                showStatus('Token retrieval failed: ' + error.message, 'error');
+            }
+        };
+
+        // Device API Tests
+        window.testCamera = async function() {
+            try {
+                log('📷 Testing camera API...');
+                const photo = await MiniApp.camera.open();
+                log('✅ Camera successful: ' + JSON.stringify(photo));
+                showStatus('Camera test successful!', 'success');
+            } catch (error) {
+                log('❌ Camera test failed: ' + error.message);
+                showStatus('Camera test failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testScanner = async function() {
+            try {
+                log('📱 Testing QR scanner...');
+                const result = await MiniApp.device.scanner.scan();
+                log('✅ Scanner successful: ' + JSON.stringify(result));
+                showStatus('QR Scanner test successful!', 'success');
+            } catch (error) {
+                log('❌ Scanner test failed: ' + error.message);
+                showStatus('QR Scanner test failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testLocation = async function() {
+            try {
+                log('📍 Testing location API...');
+                const position = await MiniApp.device.location.getCurrentPosition();
+                log('✅ Location successful: ' + JSON.stringify(position));
+                showStatus('Location test successful!', 'success');
+            } catch (error) {
+                log('❌ Location test failed: ' + error.message);
+                showStatus('Location test failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testClipboard = async function() {
+            try {
+                log('📋 Testing clipboard API...');
+                const text = await MiniApp.device.clipboard.readText();
+                log('✅ Clipboard read successful: ' + text);
+                
+                // Test writing
+                await MiniApp.device.clipboard.writeText('Hello from Mini-App SDK!');
+                log('✅ Clipboard write successful');
+                
+                showStatus('Clipboard test successful!', 'success');
+            } catch (error) {
+                log('❌ Clipboard test failed: ' + error.message);
+                showStatus('Clipboard test failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testFilePicker = async function() {
+            try {
+                log('📁 Testing file picker...');
+                const file = await MiniApp.device.file.pick();
+                log('✅ File picker successful: ' + JSON.stringify(file));
+                showStatus('File picker test successful!', 'success');
+            } catch (error) {
+                log('❌ File picker test failed: ' + error.message);
+                showStatus('File picker test failed: ' + error.message, 'error');
+            }
+        };
+
+        // Storage API Tests
+        window.testStorageSet = async function() {
+            const key = document.getElementById('storageKey').value;
+            const value = document.getElementById('storageValue').value;
+            
+            if (!key || !value) {
+                showStatus('Please enter both key and value', 'error');
+                return;
+            }
+
+            try {
+                log('💾 Setting storage item: ' + key);
+                await MiniApp.storage.setItem(key, value);
+                log('✅ Storage set successful');
+                showStatus('Storage set successful!', 'success');
+            } catch (error) {
+                log('❌ Storage set failed: ' + error.message);
+                showStatus('Storage set failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testStorageGet = async function() {
+            const key = document.getElementById('storageKey').value;
+            
+            if (!key) {
+                showStatus('Please enter a storage key', 'error');
+                return;
+            }
+
+            try {
+                log('📖 Getting storage item: ' + key);
+                const value = await MiniApp.storage.getItem(key);
+                log('✅ Storage get successful: ' + JSON.stringify(value));
+                
+                if (value) {
+                    document.getElementById('storageValue').value = value;
+                }
+                
+                showStatus('Storage get successful!', 'success');
+            } catch (error) {
+                log('❌ Storage get failed: ' + error.message);
+                showStatus('Storage get failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testStorageRemove = async function() {
+            const key = document.getElementById('storageKey').value;
+            
+            if (!key) {
+                showStatus('Please enter a storage key', 'error');
+                return;
+            }
+
+            try {
+                log('🗑️ Removing storage item: ' + key);
+                await MiniApp.storage.removeItem(key);
+                log('✅ Storage remove successful');
+                showStatus('Storage remove successful!', 'success');
+            } catch (error) {
+                log('❌ Storage remove failed: ' + error.message);
+                showStatus('Storage remove failed: ' + error.message, 'error');
+            }
+        };
+
+        // UI Component Tests
+        window.testModal = async function() {
+            const title = document.getElementById('modalTitle').value;
+            const content = document.getElementById('modalContent').value;
+            
+            if (!title || !content) {
+                showStatus('Please enter both title and content', 'error');
+                return;
+            }
+
+            try {
+                log('🎨 Showing modal: ' + title);
+                await MiniApp.ui.showModal({
+                    title: title,
+                    content: content,
+                    buttons: ['OK', 'Cancel']
+                });
+                log('✅ Modal shown successfully');
+                showStatus('Modal test successful!', 'success');
+            } catch (error) {
+                log('❌ Modal test failed: ' + error.message);
+                showStatus('Modal test failed: ' + error.message, 'error');
+            }
+        };
+
+        window.testToast = async function() {
+            const message = document.getElementById('toastMessage').value;
+            
+            if (!message) {
+                showStatus('Please enter a toast message', 'error');
+                return;
+            }
+
+            try {
+                log('🍞 Showing toast: ' + message);
+                await MiniApp.ui.toast(message);
+                log('✅ Toast shown successfully');
+                showStatus('Toast test successful!', 'success');
+            } catch (error) {
+                log('❌ Toast test failed: ' + error.message);
+                showStatus('Toast test failed: ' + error.message, 'error');
+            }
+        };
+
+        // Payment API Tests
+        window.testPayment = async function() {
+            const amount = parseInt(document.getElementById('paymentAmount').value);
+            const currency = document.getElementById('paymentCurrency').value;
+            const description = document.getElementById('paymentDescription').value;
+            
+            if (!amount || !currency || !description) {
+                showStatus('Please fill all payment fields', 'error');
+                return;
+            }
+
+            try {
+                log('💳 Testing payment: ' + description);
+                const transaction = await MiniApp.payments.requestPayment({
+                    amountMinor: amount,
+                    currency: currency,
+                    description: description
+                });
+                log('✅ Payment successful: ' + JSON.stringify(transaction));
+                showStatus('Payment test successful!', 'success');
+            } catch (error) {
+                log('❌ Payment test failed: ' + error.message);
+                showStatus('Payment test failed: ' + error.message, 'error');
+            }
+        };
+    </script>
+</body>
+</html>
