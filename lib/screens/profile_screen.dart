@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final appProvider = Provider.of<AppProvider>(context);
+    final user = appProvider.currentUser;
+    final name = user?.name ?? 'Guest User';
+    final email = user?.email ?? 'Not Logged In';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -65,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   // Name
                   Text(
-                    'Demo User',
+                    name,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -73,7 +80,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   // Status
                   Text(
-                    'demo@echat.com',
+                    email,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -347,11 +354,14 @@ class ProfileScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Signed out successfully')),
-              );
+              await Provider.of<AppProvider>(context, listen: false).signOut();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Signed out successfully')),
+                );
+              }
             },
             child: const Text('Sign Out', style: TextStyle(color: Colors.red)),
           ),

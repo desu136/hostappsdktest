@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eChat Hospitality Hub</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #1e133a 50%, #0b071e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --glass-hover: rgba(255, 255, 255, 0.07);
+            --primary: #f59e0b; /* Amber 500 */
+            --primary-hover: #d97706; /* Amber 600 */
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px 16px 100px 16px;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-col: column;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Settings Icon and panel */
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .settings-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            font-size: 18px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .settings-btn:hover {
+            background: var(--glass-hover);
+            transform: rotate(45deg);
+        }
+
+        /* Config Panel */
+        .config-panel {
+            background: rgba(15, 10, 30, 0.85);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            backdrop-filter: blur(20px);
+            animation: slideDown 0.3s ease;
+        }
+
+        .config-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .input-group input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Restaurant Cards */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .restaurants-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .restaurant-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .restaurant-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+
+        .restaurant-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .restaurant-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(245, 158, 11, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .restaurant-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .restaurant-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .restaurant-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .restaurant-branch {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .restaurant-tag {
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 6px;
+            width: fit-content;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Floating Action Scanner Button */
+        .scanner-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 448px;
+            z-index: 100;
+        }
+
+        .scanner-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            color: #0f0c1b;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .scanner-btn:hover {
+            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .scanner-btn:active {
+            transform: translateY(0);
+        }
+
+        .scanner-icon {
+            font-size: 18px;
+        }
+
+        /* Empty/Loading State */
+        .state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+            animation: slideDown 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header Bar -->
+        <div class="header-actions">
+            <div class="logo-area">
+                <span class="logo-icon">🍽️</span>
+                <span class="logo-text">eChat Hospitality</span>
+            </div>
+            <button class="settings-btn" id="settingsToggleBtn" onclick="toggleConfigPanel()">⚙️</button>
+        </div>
+
+        <!-- Connection Settings Override -->
+        <div class="config-panel" id="configPanel">
+            <div class="config-title">Connection Settings</div>
+            <div class="input-group">
+                <label for="serverIpInput">Server IP Address</label>
+                <input type="text" id="serverIpInput" placeholder="e.g. 192.168.1.12" value="">
+            </div>
+            <button class="scanner-btn" style="padding: 10px; font-size: 13px; font-weight: 700;" onclick="saveConfig()">Save Settings</button>
+        </div>
+
+        <!-- Restaurant list section -->
+        <div>
+            <h2 class="section-title">Select Restaurant</h2>
+            <div id="restaurantsList" class="restaurants-grid">
+                <!-- Loading State -->
+                <div class="state-container" id="loadingState">
+                    <div class="spinner"></div>
+                    <p style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Searching for available venues...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating QR scanner button -->
+        <div class="scanner-container">
+            <button class="scanner-btn" onclick="triggerQrScan()">
+                <span class="scanner-icon">📷</span>
+                <span>Scan Dine-In Table QR</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Official MiniApp SDK Setup -->
+    <script type="module">
+        import { MiniApp } from '../node_modules/@ebisa-tesfaye/miniapp-sdk/index.js';
+        window.MiniApp = MiniApp;
+
+        // Initialize SDK
+        async function initSDK() {
+            try {
+                await MiniApp.init({
+                    appId: "com.echat.hospitality",
+                    permissions: ["device.scanner", "storage.read", "storage.write"]
+                });
+                console.log("MiniApp SDK successfully initialized!");
+            } catch (e) {
+                console.warn("Could not initialize MiniApp SDK (running in web browser fallback):", e);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', initSDK);
+    </script>
+
+    <!-- App Logic -->
+    <script>
+        // Default host IP settings
+        let hostIp = "192.168.1.35"; // Smart default detected from local machine IP
+        
+        // Auto-detect host IP from address bar
+        if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            hostIp = window.location.hostname;
+        }
+
+        // Load saved settings
+        const savedIp = localStorage.getItem('hostIp');
+        if (savedIp) {
+            hostIp = savedIp;
+        }
+        document.getElementById("serverIpInput").value = hostIp;
+
+        function toggleConfigPanel() {
+            const panel = document.getElementById("configPanel");
+            panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+        }
+
+        function saveConfig() {
+            const val = document.getElementById("serverIpInput").value.trim();
+            if (val) {
+                hostIp = val;
+                localStorage.setItem("hospitality_host_ip", val);
+                toggleConfigPanel();
+                loadRestaurants();
+            }
+        }
+
+        // Fetch restaurants list from public API
+        async function loadRestaurants() {
+            const listContainer = document.getElementById("restaurantsList");
+            const loadingState = document.getElementById("loadingState");
+            
+            // Show loading state
+            listContainer.innerHTML = '';
+            listContainer.appendChild(loadingState);
+            loadingState.style.display = 'flex';
+
+            try {
+                const res = await fetch(`http://${hostIp}:4000/api/restaurant/public/list`);
+                if (!res.ok) throw new Error("API server returned error status");
+                const data = await res.json();
+                
+                listContainer.innerHTML = '';
+                if (data.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="state-container">
+                            <p style="color: var(--text-muted); font-size: 14px;">No active restaurants found at this branch.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.forEach(rest => {
+                    const card = document.createElement("div");
+                    card.className = "restaurant-card animate-fadeIn";
+                    card.onclick = () => openRestaurantMenu(rest.id);
+
+                    // Logo fallback to initial if no URL is provided
+                    const logoContent = rest.logo_url 
+                        ? `<img src="${rest.logo_url}" class="restaurant-logo" alt="${rest.name}">`
+                        : `<div class="restaurant-logo">${rest.name.charAt(0).toUpperCase()}</div>`;
+
+                    card.innerHTML = `
+                        ${logoContent}
+                        <div class="restaurant-info">
+                            <div class="restaurant-name">${rest.name}</div>
+                            <div class="restaurant-branch">${rest.branch?.name || "Main Branch"}</div>
+                            <div class="restaurant-tag">Takeaway & Delivery</div>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error("Failed to load restaurants:", e);
+                listContainer.innerHTML = `
+                    <div class="state-container">
+                        <span style="font-size: 32px;">🔌</span>
+                        <p style="color: #ef4444; font-size: 14px; font-weight: 600;">Could not connect to server</p>
+                        <p style="color: var(--text-muted); font-size: 12px; max-width: 250px;">Please check if the backend is running at http://${hostIp}:4000 or tap settings ⚙️ to change IP.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Open menu page inside WebView (no table id, takeaway/delivery/pre-order flow)
+        function openRestaurantMenu(restaurantId) {
+            window.location.href = `http://${hostIp}:3000/menu/${restaurantId}`;
+        }
+
+        // Trigger native scan code using MiniApp bridge SDK
+        async function triggerQrScan() {
+            try {
+                if (window.MiniApp && window.MiniApp.device && window.MiniApp.device.scanner) {
+                    const result = await window.MiniApp.device.scanner.scan();
+                    if (result) {
+                        // Scan result should be a URL like http://192.168.1.12:3000/menu/<restaurantId>?tableId=<tableId>
+                        if (result.startsWith("http://") || result.startsWith("https://")) {
+                            window.location.href = result;
+                        } else {
+                            alert("Scanned Code: " + result);
+                        }
+                    }
+                } else {
+                    // Fallback prompt for testing in browser without bridge SDK
+                    const result = prompt("Enter simulated table QR scan URL:", `http://${hostIp}:3000/menu/cm0k37a1f0003rwtzefg5g5a9?tableId=cm0k37a1f0003rwtzefg5g5a8`);
+                    if (result) {
+                        window.location.href = result;
+                    }
+                }
+            } catch (e) {
+                alert("QR Scanner Error: " + e.message);
+            }
+        }
+
+        // Initial load
+        window.addEventListener('load', loadRestaurants);
+    </script>
+</body>
+</html>

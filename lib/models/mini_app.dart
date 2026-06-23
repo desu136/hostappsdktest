@@ -7,6 +7,7 @@ class MiniApp {
   final String? author;
   final String manifestPath;
   final String localPath;
+  final String? customIcon;
 
   const MiniApp({
     required this.id,
@@ -17,6 +18,7 @@ class MiniApp {
     this.author,
     required this.manifestPath,
     required this.localPath,
+    this.customIcon,
   });
 
   // Legacy constructor for backward compatibility
@@ -32,11 +34,19 @@ class MiniApp {
        permissions = [],
        author = null,
        manifestPath = '',
-       localPath = '';
+       localPath = '',
+       customIcon = icon;
 
   // For backward compatibility
   String get description => 'Mini-App: $name';
-  String get icon => '📱';
+  String get icon {
+    if (customIcon != null && customIcon!.isNotEmpty) return customIcon!;
+    if (id == 'restaurant_miniapp' || id == 'hotel_menu') return '🍔';
+    if (id == 'qr_scanner') return '🔍';
+    if (id == 'simple_app') return '📱';
+    if (id == 'test_app') return '🧪';
+    return '📱';
+  }
   String get url => entryUrl;
   String get category => 'General';
 

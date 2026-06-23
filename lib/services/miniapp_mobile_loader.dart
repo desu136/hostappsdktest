@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import '../models/mini_app.dart';
 
@@ -27,10 +28,45 @@ class MiniAppMobileLoader {
     await loadAvailableMiniApps();
   }
 
+  /// Get the correct Mini-Apps directory path for current platform
+  static Directory getMiniAppsDirectory() {
+    if (kIsWeb) {
+      // Web - use relative path
+      return Directory(_miniAppsDir);
+    } else {
+      // Mobile/Desktop - try different possible paths
+      final possiblePaths = [
+        _miniAppsDir,                    // Current directory
+        'assets/$_miniAppsDir',          // Assets directory
+        '../$_miniAppsDir',              // Parent directory
+        '../../$_miniAppsDir',           // Two levels up
+        'data/user/0/com.example.echat/$_miniAppsDir', // Android app data
+      ];
+      
+      for (final path in possiblePaths) {
+        final dir = Directory(path);
+        if (dir.existsSync()) {
+          print('✅ Found Mini-Apps directory at: ${dir.path}');
+          return dir;
+        }
+      }
+      
+      // Fallback to current directory
+      print('⚠️ Using fallback Mini-Apps directory: $_miniAppsDir');
+      return Directory(_miniAppsDir);
+    }
+  }
+
   /// Load all available Mini-Apps from miniapps directory
   static Future<List<MiniApp>> loadAvailableMiniApps() async {
     try {
-      final directory = Directory(_miniAppsDir);
+      // For mobile platforms, try to load from assets first
+      if (!kIsWeb) {
+        return await _loadFromAssets();
+      }
+      
+      // For web and fallback, use file system
+      final directory = getMiniAppsDirectory();
       
       if (!await directory.exists()) {
         print('⚠️ MiniApps directory not found: $_miniAppsDir');
@@ -53,6 +89,61 @@ class MiniAppMobileLoader {
       return miniApps;
     } catch (e) {
       print('❌ Error loading Mini-Apps for Mobile: $e');
+      return [];
+    }
+  }
+
+  /// Load Mini-Apps from Flutter assets (for mobile platforms)
+  static Future<List<MiniApp>> _loadFromAssets() async {
+    final miniApps = <MiniApp>[];
+    
+    try {
+      // Known Mini-Apps in assets
+      final knownApps = ['test_app', 'simple_app', 'restaurant_miniapp'];
+      
+      for (final appName in knownApps) {
+        try {
+          // Load manifest from assets
+          final manifestPath = '$_miniAppsDir/$appName/miniapp.json';
+          final manifestData = await rootBundle.loadString(manifestPath);
+          final manifest = jsonDecode(manifestData) as Map<String, dynamic>;
+          
+          // Extract manifest information
+          final name = manifest['name'] as String? ?? 'Unknown App';
+          final version = manifest['version'] as String? ?? '1.0.0';
+          final entry = manifest['entry'] as String? ?? 'index.html';
+          final permissions = (manifest['permissions'] as List<dynamic>?)?.cast<String>() ?? [];
+          final author = manifest['author'] as String?;
+          final icon = manifest['icon'] as String?;
+          
+          // Construct asset URL for mobile
+          final entryUrl = 'assets/$_miniAppsDir/$appName/$entry';
+          
+          final miniApp = MiniApp(
+            id: appName,
+            name: name,
+            version: version,
+            entryUrl: entryUrl,
+            permissions: permissions,
+            author: author,
+            manifestPath: manifestPath,
+            localPath: '$_miniAppsDir/$appName',
+            customIcon: icon,
+          );
+          
+          miniApps.add(miniApp);
+          _loadedApps[appName] = miniApp;
+          
+          print('✅ Loaded Mini-App from assets: $name');
+        } catch (e) {
+          print('⚠️ Failed to load Mini-App $appName from assets: $e');
+        }
+      }
+      
+      print('✅ Loaded ${miniApps.length} Mini-Apps from assets');
+      return miniApps;
+    } catch (e) {
+      print('❌ Error loading Mini-Apps from assets: $e');
       return [];
     }
   }
@@ -103,6 +194,7 @@ class MiniAppMobileLoader {
       final entry = manifest['entry'] as String? ?? 'index.html';
       final permissions = (manifest['permissions'] as List<dynamic>?)?.cast<String>() ?? [];
       final author = manifest['author'] as String?;
+      final icon = manifest['icon'] as String?;
 
       // Construct entry URL based on platform
       final entryFile = File('${directory.path}/$entry');
@@ -139,6 +231,7 @@ class MiniAppMobileLoader {
         author: author,
         manifestPath: manifestFile.path,
         localPath: directory.path,
+        customIcon: icon,
       );
 
     } catch (e) {

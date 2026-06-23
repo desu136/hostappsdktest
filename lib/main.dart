@@ -12,7 +12,7 @@ import 'screens/webview_screen.dart';
 import 'screens/miniapp_container_screen.dart';
 import 'screens/miniapp_browser_screen.dart';
 import 'services/miniapp_server.dart';
-
+import 'package:miniapp_runtime_engine/miniapp_runtime_engine.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   

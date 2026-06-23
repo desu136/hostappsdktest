@@ -1,0 +1,22 @@
+{
+  "name": "Hospitality Hub - Order & Delivery",
+  "version": "1.0.0",
+  "icon": "🍔",
+  "entry": "index.html",
+  "permissions": [
+    "auth.profile",
+    "device.camera",
+    "device.scanner",
+    "device.location",
+    "device.clipboard",
+    "device.file",
+    "storage.read",
+    "storage.write",
+    "ui.modal",
+    "ui.toast",
+    "payments.request"
+  ],
+  "author": "Hospitality Hub Team",
+  "sdk": "@ebisa-tesfaye/miniapp-sdk",
+  "description": "Access menus, place pre-orders, takeaway, or delivery from your favorite restaurants."
+}

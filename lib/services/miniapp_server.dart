@@ -65,9 +65,16 @@ class MiniAppServer {
       } else {
         // Try to serve index.html for SPA routing
         final File indexFile = File(path.join('miniapps', 'test_app', 'index.html'));
+        final File restIndexFile = File(path.join('miniapps', 'restaurant_miniapp', 'index.html'));
         if (indexFile.existsSync() && requestPath.startsWith('/test_app/')) {
           request.response.headers.set('Content-Type', 'text/html');
           final Uint8List content = indexFile.readAsBytesSync();
+          request.response.add(content);
+          request.response.statusCode = HttpStatus.ok;
+          print('✅ Served index.html for: $requestPath');
+        } else if (restIndexFile.existsSync() && requestPath.startsWith('/restaurant_miniapp/')) {
+          request.response.headers.set('Content-Type', 'text/html');
+          final Uint8List content = restIndexFile.readAsBytesSync();
           request.response.add(content);
           request.response.statusCode = HttpStatus.ok;
           print('✅ Served index.html for: $requestPath');

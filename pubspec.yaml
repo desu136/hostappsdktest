@@ -35,9 +35,8 @@ dependencies:
   shared_preferences: ^2.2.2
   path: ^1.8.3
   webview_flutter: ^4.4.2
-  
-  # Remove runtime engine for mobile (use native implementation)
-  # miniapp_runtime_engine: ^0.0.1
+  miniapp_runtime_engine: ^1.0.0
+  mobile_scanner: ^7.2.0
  
 
 dev_dependencies:
@@ -63,9 +62,19 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/
+    - miniapps/
+    - miniapps/test_app/
+    - miniapps/test_app/index.html
+    - miniapps/test_app/miniapp.json
+    - miniapps/simple_app/
+    - miniapps/simple_app/index.html
+    - miniapps/simple_app/miniapp.json
+    - miniapps/restaurant_miniapp/
+    - miniapps/restaurant_miniapp/index.html
+    - miniapps/restaurant_miniapp/miniapp.json
+    - web/miniapp-test.html
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
