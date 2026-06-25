@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eChat Hospitality Hub</title>
+    <title>Hospitality Hub Service Portal</title>
     <!-- Google Fonts: Outfit -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f0c1b 0%, #1e133a 50%, #0b071e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.07);
-            --glass-hover: rgba(255, 255, 255, 0.07);
-            --primary: #f59e0b; /* Amber 500 */
-            --primary-hover: #d97706; /* Amber 600 */
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
+            --bg-gradient: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-hover: rgba(0, 0, 0, 0.02);
+            --primary: #d97706; /* Amber 600 */
+            --primary-hover: #b45309; /* Amber 700 */
+            --text-main: #1f2937; /* Slate 800 */
+            --text-muted: #6b7280; /* Gray 500 */
+            --success: #059669;
+            --card-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -29,7 +32,7 @@
             background: var(--bg-gradient);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 20px 16px 100px 16px;
+            padding-bottom: 90px;
             overflow-x: hidden;
             display: flex;
             justify-content: center;
@@ -39,17 +42,41 @@
             width: 100%;
             max-width: 480px;
             display: flex;
-            flex-col: column;
             flex-direction: column;
-            gap: 24px;
+            gap: 16px;
+            padding: 16px;
         }
 
-        /* Settings Icon and panel */
+        /* Screen View Switcher */
+        .app-view {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            animation: viewFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .app-view.active {
+            display: flex;
+        }
+
+        @keyframes viewFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Top Header Bar */
         .header-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            padding-bottom: 4px;
         }
 
         .logo-area {
@@ -59,7 +86,7 @@
         }
 
         .logo-icon {
-            font-size: 28px;
+            font-size: 24px;
             background: linear-gradient(135deg, #f59e0b, #ec4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -71,46 +98,403 @@
             letter-spacing: -0.5px;
         }
 
-        .settings-btn {
+        /* Top Hero Section (McDonald's Style) */
+        .hero-options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+        }
+
+        .hero-option-card {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            width: 40px;
-            height: 40px;
+            border-radius: 24px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            backdrop-filter: blur(15px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .hero-option-card:active {
+            transform: scale(0.96);
+        }
+
+        .hero-option-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .hero-card-img {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+            border-radius: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .hero-option-card:hover .hero-card-img {
+            transform: scale(1.06);
+        }
+
+        .hero-card-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 4px;
+        }
+
+        .hero-card-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Current Outlet Info Card */
+        .current-outlet-bar {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px dashed rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .outlet-bar-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .outlet-change-btn {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Services Grid (Smaller / McDonald's Grid Style) */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+        }
+
+        .services-horizontal-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .small-service-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            text-align: center;
+            padding: 10px 4px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .small-service-item:active {
+            transform: scale(0.95);
+        }
+
+        .small-service-item:hover {
+            background: var(--glass-hover);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .small-service-icon {
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .small-service-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .small-service-item.soon {
+            opacity: 0.5;
+        }
+
+        /* Banner Carousel */
+        .promo-carousel {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 4px;
+            width: 100%;
+        }
+
+        .promo-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .promo-banner {
+            flex: 0 0 85%;
+            scroll-snap-align: start;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .promo-tag {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--primary);
+            background: rgba(245, 158, 11, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            width: fit-content;
+            text-transform: uppercase;
+        }
+
+        .promo-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .promo-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Featured Outlets List */
+        .branches-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .branch-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .branch-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .branch-logo {
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .branch-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .branch-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .branch-location {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Popular Items Grid */
+        .items-grid {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 4px;
+        }
+
+        .items-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        .item-card {
+            flex: 0 0 130px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .item-thumb {
+            width: 100%;
+            height: 70px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .item-name {
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-price {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .quick-add-btn {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            color: var(--primary);
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Back Header for sub-views */
+        .back-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .back-circle-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-main);
-            font-size: 18px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .settings-btn:hover {
-            background: var(--glass-hover);
-            transform: rotate(45deg);
-        }
-
-        /* Config Panel */
-        .config-panel {
-            background: rgba(15, 10, 30, 0.85);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px;
-            display: none;
-            flex-direction: column;
-            gap: 14px;
-            backdrop-filter: blur(20px);
-            animation: slideDown 0.3s ease;
-        }
-
-        .config-title {
             font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-circle-btn:hover {
+            background: var(--glass-hover);
+        }
+
+        .view-title-main {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        /* Forms styling */
+        .flow-form {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--card-shadow);
         }
 
         .input-group {
@@ -120,245 +504,431 @@
         }
 
         .input-group label {
-            font-size: 12px;
+            font-size: 10px;
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .input-group input {
-            background: rgba(255, 255, 255, 0.05);
+            background: #ffffff;
             border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            padding: 10px 14px;
-            color: white;
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text-main);
             font-family: inherit;
-            font-size: 14px;
+            font-size: 13px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
         }
 
         .input-group input:focus {
             border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
         }
 
-        /* Restaurant Cards */
-        .section-title {
-            font-size: 15px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            margin-bottom: 4px;
+        .form-submit-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            color: #0f0c1b;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s ease;
+            margin-top: 4px;
         }
 
-        .restaurants-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
+        .form-submit-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Bottom Tab Navigation Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
             width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.96);
+            border-top: 1px solid var(--glass-border);
+            padding: 8px 30px 20px 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 500;
+            backdrop-filter: blur(20px);
         }
 
-        .restaurant-card {
+        .nav-tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            width: 80px;
+        }
+
+        .nav-tab-icon {
+            font-size: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-tab-item.active {
+            color: var(--primary);
+        }
+
+        .nav-tab-item.active .nav-tab-icon {
+            transform: scale(1.1);
+        }
+
+        /* Profile & Account View Styles */
+        .profile-card {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 16px;
+            border-radius: 24px;
+            padding: 20px;
             display: flex;
             align-items: center;
             gap: 16px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            box-shadow: var(--card-shadow);
         }
 
-        .restaurant-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.5s;
-        }
-
-        .restaurant-card:hover::before {
-            transform: translateX(100%);
-        }
-
-        .restaurant-card:hover {
-            background: var(--glass-hover);
-            border-color: rgba(245, 158, 11, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        .restaurant-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            object-fit: cover;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
             font-weight: 700;
-            color: var(--primary);
-            flex-shrink: 0;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
-        .restaurant-info {
+        .profile-info {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
 
-        .restaurant-name {
+        .profile-name {
             font-size: 16px;
-            font-weight: 700;
-            color: white;
+            font-weight: 800;
+            color: var(--text-main);
         }
 
-        .restaurant-branch {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .restaurant-tag {
-            font-size: 10px;
-            font-weight: 700;
-            background: rgba(245, 158, 11, 0.1);
+        .profile-status {
+            font-size: 11px;
             color: var(--primary);
-            padding: 3px 8px;
-            border-radius: 6px;
-            width: fit-content;
-            margin-top: 4px;
+            font-weight: 600;
             text-transform: uppercase;
         }
 
-        /* Floating Action Scanner Button */
-        .scanner-container {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 448px;
-            z-index: 100;
-        }
-
-        .scanner-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border: none;
-            border-radius: 16px;
-            padding: 16px;
-            color: #0f0c1b;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 800;
+        .settings-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 20px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: var(--card-shadow);
         }
 
-        .scanner-btn:hover {
-            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.5);
-            transform: translateY(-2px);
+        .settings-card-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
         }
 
-        .scanner-btn:active {
-            transform: translateY(0);
-        }
-
-        .scanner-icon {
-            font-size: 18px;
-        }
-
-        /* Empty/Loading State */
+        /* Loader & Error indicators */
         .state-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 60px 20px;
+            padding: 30px 20px;
             text-align: center;
-            gap: 16px;
+            gap: 14px;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s linear infinite;
+        /* Toast Styling */
+        .toast-overlay {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 14px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            opacity: 0;
+            max-width: 90%;
+            width: max-content;
         }
 
-        /* Animations */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .toast-overlay.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .toast-icon {
+            font-size: 18px;
         }
 
-        .animate-fadeIn {
-            animation: slideDown 0.3s ease;
+        .toast-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
         }
     </style>
 </head>
 <body>
+    <!-- Custom Toast Alert -->
+    <div id="toastAlert" class="toast-overlay">
+        <span id="toastIcon" class="toast-icon">✨</span>
+        <span id="toastText" class="toast-text">Success message!</span>
+    </div>
+
     <div class="app-container">
-        <!-- Top Header Bar -->
+        <!-- TOP ACTIONS (Always Present) -->
         <div class="header-actions">
             <div class="logo-area">
-                <span class="logo-icon">🍽️</span>
-                <span class="logo-text">eChat Hospitality</span>
+                <span class="logo-icon">🍔</span>
+                <span id="tenantBrandName" class="logo-text">eChat Hub</span>
             </div>
-            <button class="settings-btn" id="settingsToggleBtn" onclick="toggleConfigPanel()">⚙️</button>
         </div>
 
-        <!-- Connection Settings Override -->
-        <div class="config-panel" id="configPanel">
-            <div class="config-title">Connection Settings</div>
-            <div class="input-group">
-                <label for="serverIpInput">Server IP Address</label>
-                <input type="text" id="serverIpInput" placeholder="e.g. 192.168.1.12" value="">
+        <!-- VIEW 1: HOME PORTAL -->
+        <div id="view-home" class="app-view active">
+            <!-- Top Hero Section (Dine-In and Delivery represented with graphics) -->
+            <div class="hero-options-grid">
+                <div class="hero-option-card" onclick="startServiceFlow('delivery')">
+                    <img src="https://th.bing.com/th/id/OIP.2VkQ_Y0pKrX60PbpyQ7B1QHaEK?w=319&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3" class="hero-card-img" alt="Delivery" style="object-fit: cover; height: 90px; border-radius: 12px;">
+                    <div>
+                        <div class="hero-card-title">Delivery</div>
+                        <div class="hero-card-subtitle">Fast direct to door</div>
+                    </div>
+                </div>
+                <div class="hero-option-card" onclick="startServiceFlow('dine-in')">
+                    <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=500&q=80" class="hero-card-img" alt="Dine-In" style="object-fit: cover; height: 90px; border-radius: 12px;">
+                    <div>
+                        <div class="hero-card-title">Dine-In</div>
+                        <div class="hero-card-subtitle">Eat at our tables</div>
+                    </div>
+                </div>
             </div>
-            <button class="scanner-btn" style="padding: 10px; font-size: 13px; font-weight: 700;" onclick="saveConfig()">Save Settings</button>
-        </div>
 
-        <!-- Restaurant list section -->
-        <div>
-            <h2 class="section-title">Select Restaurant</h2>
-            <div id="restaurantsList" class="restaurants-grid">
-                <!-- Loading State -->
-                <div class="state-container" id="loadingState">
-                    <div class="spinner"></div>
-                    <p style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Searching for available venues...</p>
+            <!-- Current Selected Outlet Banner -->
+            <div class="current-outlet-bar">
+                <div class="outlet-bar-info">
+                    <span style="font-size: 16px;">📍</span>
+                    <span id="currentOutletLabel">No branch selected</span>
+                </div>
+                <button class="outlet-change-btn" id="outletChangeBtn" onclick="openBranchSelectorGlobal()">Select</button>
+            </div>
+
+            <!-- Other Services Section (McDonald's row layout) -->
+            <div>
+                <h3 class="section-title">Other Services</h3>
+                <div class="services-horizontal-grid" style="margin-top: 8px;">
+                    <div class="small-service-item" onclick="startServiceFlow('takeaway')">
+                        <span class="small-service-icon">🛍️</span>
+                        <span class="small-service-label">Takeaway</span>
+                    </div>
+                    <div class="small-service-item soon" onclick="showToast('Room Service is coming soon!', '🏨')">
+                        <span class="small-service-icon">🛌</span>
+                        <span class="small-service-label">In-Room</span>
+                    </div>
+                    <div class="small-service-item soon" onclick="showToast('Reservations are coming soon!', '📅')">
+                        <span class="small-service-icon">📅</span>
+                        <span class="small-service-label">Reserve</span>
+                    </div>
+                    <div class="small-service-item soon" onclick="showToast('Hotel booking is coming soon!', '🛌')">
+                        <span class="small-service-icon">🏨</span>
+                        <span class="small-service-label">Book Room</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotions Banner Slider -->
+            <div>
+                <h3 class="section-title">Special Offers</h3>
+                <div class="promo-carousel" style="margin-top: 8px;">
+                    <div class="promo-banner">
+                        <span class="promo-tag">Promotion</span>
+                        <div class="promo-title">🍔 50% Off First Dining Order</div>
+                        <div class="promo-desc">Use code WELCOME50 when placing takeaway or delivery. Valid today only.</div>
+                    </div>
+                    <div class="promo-banner">
+                        <span class="promo-tag">Hotel Special</span>
+                        <div class="promo-title">✨ Free Room Service Delivery</div>
+                        <div class="promo-desc">Order anything to your room. Zero service charge for premium members.</div>
+                    </div>
+                    <div class="promo-banner">
+                        <span class="promo-tag">Happy Hour</span>
+                        <div class="promo-title">🍸 2-for-1 Cocktails</div>
+                        <div class="promo-desc">Available at our rooftop bar between 5:00 PM and 7:00 PM local time.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Outlets & Locations -->
+            <div>
+                <h3 class="section-title">Featured Outlets</h3>
+                <div id="featuredBranchContainer" class="branches-list" style="margin-top: 8px;">
+                    <!-- Branches loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Popular Items Showcase -->
+            <div>
+                <h3 class="section-title">Popular Items</h3>
+                <div class="items-grid" style="margin-top: 8px;">
+                    <div class="item-card">
+                        <div class="item-thumb">🍕</div>
+                        <div class="item-name">Pepperoni Pizza</div>
+                        <div class="item-bottom">
+                            <span class="item-price">$14.50</span>
+                            <span class="quick-add-btn" onclick="showToast('Select Dine-In or Delivery first!')">+</span>
+                        </div>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-thumb">🍔</div>
+                        <div class="item-name">Double Smash Burger</div>
+                        <div class="item-bottom">
+                            <span class="item-price">$12.00</span>
+                            <span class="quick-add-btn" onclick="showToast('Select Dine-In or Delivery first!')">+</span>
+                        </div>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-thumb">🍰</div>
+                        <div class="item-name">Strawberry Cheesecake</div>
+                        <div class="item-bottom">
+                            <span class="item-price">$7.50</span>
+                            <span class="quick-add-btn" onclick="showToast('Select Dine-In or Delivery first!')">+</span>
+                        </div>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-thumb">☕</div>
+                        <div class="item-name">Iced Caramel Latte</div>
+                        <div class="item-bottom">
+                            <span class="item-price">$4.80</span>
+                            <span class="quick-add-btn" onclick="showToast('Select Dine-In or Delivery first!')">+</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Floating QR scanner button -->
-        <div class="scanner-container">
-            <button class="scanner-btn" onclick="triggerQrScan()">
-                <span class="scanner-icon">📷</span>
-                <span>Scan Dine-In Table QR</span>
-            </button>
+        <!-- VIEW 2: ACCOUNT & SETTINGS -->
+        <div id="view-account" class="app-view">
+            <!-- Profile Greeting Card -->
+            <div class="profile-card">
+                <div class="profile-avatar">G</div>
+                <div class="profile-info">
+                    <div class="profile-name">Guest Customer</div>
+                    <div class="profile-status">Premium Loyalty Member</div>
+                </div>
+            </div>
+
+            <!-- Connection settings panel integrated into account view -->
+            <div class="settings-card">
+                <div class="settings-card-title">Hub Connections</div>
+                <div class="input-group">
+                    <label for="serverIpInput">Server IP Address</label>
+                    <input type="text" id="serverIpInput" placeholder="e.g. 10.167.172.97" value="">
+                </div>
+                <div class="input-group">
+                    <label for="tenantIdInput">Tenant ID Override</label>
+                    <input type="text" id="tenantIdInput" placeholder="UUID (or blank for auto)" value="">
+                </div>
+                <button class="form-submit-btn" style="margin-top: 4px;" onclick="saveConfig()">Apply Connections</button>
+            </div>
+
+            <!-- Mock past orders -->
+            <div class="settings-card">
+                <div class="settings-card-title">Recent Orders</div>
+                <div style="font-size: 13px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--glass-border); padding-bottom: 6px;">
+                        <span>🍕 Pizza & Drink (Amen Restaurant)</span>
+                        <span style="color: var(--success); font-weight: 700;">Delivered</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>🍔 Double Burger (Grand Horizon Bistro)</span>
+                        <span style="color: var(--text-muted); font-weight: 700;">Cancelled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: BRANCH / OUTLET SELECTION -->
+        <div id="view-branch-select" class="app-view">
+            <div class="back-header">
+                <button class="back-circle-btn" onclick="navigateHome()">←</button>
+                <div class="view-title-main" id="branchSelectTitle">Select Branch</div>
+            </div>
+            <div id="branchesGrid" class="branches-list">
+                <!-- Branches filtered by selected service -->
+            </div>
+        </div>
+
+        <!-- VIEW 4: DELIVERY DETAILS ENTRY -->
+        <div id="view-delivery-form" class="app-view">
+            <div class="back-header">
+                <button class="back-circle-btn" onclick="navigateHome()">←</button>
+                <div class="view-title-main">Delivery Address</div>
+            </div>
+            <div class="flow-form">
+                <div class="input-group">
+                    <label for="delivName">Your Name</label>
+                    <input type="text" id="delivName" placeholder="e.g. John Doe">
+                </div>
+                <div class="input-group">
+                    <label for="delivPhone">Phone Number</label>
+                    <input type="tel" id="delivPhone" placeholder="e.g. +251 911...">
+                </div>
+                <div class="input-group">
+                    <label for="delivAddress">Delivery Address</label>
+                    <input type="text" id="delivAddress" placeholder="e.g. Room 402, Block B, Main Street">
+                </div>
+                <button class="form-submit-btn" onclick="submitDeliveryDetails()">Choose Restaurant & Browse Menu</button>
+            </div>
+        </div>
+
+        <!-- FIXED BOTTOM NAVIGATION BAR -->
+        <div class="bottom-nav-bar">
+            <div class="nav-tab-item active" id="tab-home" onclick="switchTab('home')">
+                <span class="nav-tab-icon">🏠</span>
+                <span>Home</span>
+            </div>
+            <div class="nav-tab-item" id="tab-account" onclick="switchTab('account')">
+                <span class="nav-tab-icon">👤</span>
+                <span>My Account</span>
+            </div>
         </div>
     </div>
 
@@ -382,128 +952,277 @@
         document.addEventListener('DOMContentLoaded', initSDK);
     </script>
 
-    <!-- App Logic -->
+    <!-- App Logic Script -->
     <script>
-        // Default host IP settings
-        let hostIp = "192.168.1.35"; // Smart default detected from local machine IP
-        
+        // Connection & context config variables
+        let hostIp = "10.167.172.97"; // Smart default detected from local machine IP
+        let tenantId = "";
+
         // Auto-detect host IP from address bar
         if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             hostIp = window.location.hostname;
         }
 
-        // Load saved settings
-        const savedIp = localStorage.getItem('hostIp');
-        if (savedIp) {
-            hostIp = savedIp;
-        }
-        document.getElementById("serverIpInput").value = hostIp;
+        // Load settings from local storage
+        const savedIp = localStorage.getItem("hospitality_host_ip");
+        if (savedIp) hostIp = savedIp;
+        
+        const savedTenant = localStorage.getItem("hospitality_tenant_id");
+        if (savedTenant) tenantId = savedTenant;
 
-        function toggleConfigPanel() {
-            const panel = document.getElementById("configPanel");
-            panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+        // Extract query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryTenantId = urlParams.get("tenantId");
+        if (queryTenantId) {
+            tenantId = queryTenantId;
+            localStorage.setItem("hospitality_tenant_id", queryTenantId);
+        }
+
+        document.getElementById("serverIpInput").value = hostIp;
+        document.getElementById("tenantIdInput").value = tenantId;
+
+        // Config data holder
+        let appConfig = {
+            business_name: "Hospitality Hub",
+            business_type: "HOTEL_RESTAURANT",
+            modules: [],
+            restaurants: []
+        };
+        
+        let selectedService = "";
+
+        // Display generic Toast Alert
+        function showToast(text, icon = "✨") {
+            const toast = document.getElementById("toastAlert");
+            document.getElementById("toastIcon").innerText = icon;
+            document.getElementById("toastText").innerText = text;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
         }
 
         function saveConfig() {
-            const val = document.getElementById("serverIpInput").value.trim();
-            if (val) {
-                hostIp = val;
-                localStorage.setItem("hospitality_host_ip", val);
-                toggleConfigPanel();
-                loadRestaurants();
+            const ipVal = document.getElementById("serverIpInput").value.trim();
+            const tenantVal = document.getElementById("tenantIdInput").value.trim();
+            
+            if (ipVal) {
+                hostIp = ipVal;
+                localStorage.setItem("hospitality_host_ip", ipVal);
+            }
+            
+            tenantId = tenantVal;
+            localStorage.setItem("hospitality_tenant_id", tenantVal);
+            
+            showToast("Connections applied successfully!", "⚙️");
+            loadConfigAndData();
+            switchTab('home');
+        }
+
+        // Switch bottom tab
+        function switchTab(tabId) {
+            document.querySelectorAll(".nav-tab-item").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".app-view").forEach(v => v.classList.remove("active"));
+            
+            document.getElementById("tab-" + tabId).classList.add("active");
+            
+            if (tabId === 'home') {
+                document.getElementById("view-home").classList.add("active");
+            } else if (tabId === 'account') {
+                document.getElementById("view-account").classList.add("active");
             }
         }
 
-        // Fetch restaurants list from public API
-        async function loadRestaurants() {
-            const listContainer = document.getElementById("restaurantsList");
-            const loadingState = document.getElementById("loadingState");
+        // View Navigation Switcher
+        function showView(viewId) {
+            const views = document.querySelectorAll(".app-view");
+            views.forEach(v => v.classList.remove("active"));
             
-            // Show loading state
-            listContainer.innerHTML = '';
-            listContainer.appendChild(loadingState);
-            loadingState.style.display = 'flex';
+            const activeView = document.getElementById(viewId);
+            if (activeView) {
+                activeView.classList.add("active");
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
+        function navigateHome() {
+            showView("view-home");
+            switchTab('home');
+        }
+
+        // Fetch dynamic tenant configuration
+        async function loadConfigAndData() {
             try {
-                const res = await fetch(`http://${hostIp}:4000/api/restaurant/public/list`);
-                if (!res.ok) throw new Error("API server returned error status");
-                const data = await res.json();
+                let url = `http://${hostIp}:4000/api/restaurant/public/config`;
+                if (tenantId) {
+                    url += `?tenantId=${tenantId}`;
+                }
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Server returned config error");
                 
-                listContainer.innerHTML = '';
-                if (data.length === 0) {
-                    listContainer.innerHTML = `
-                        <div class="state-container">
-                            <p style="color: var(--text-muted); font-size: 14px;">No active restaurants found at this branch.</p>
-                        </div>
-                    `;
-                    return;
+                const data = await res.json();
+                appConfig = data;
+                
+                // Cache correct resolved tenant ID
+                if (data.tenantId && data.tenantId !== tenantId) {
+                    tenantId = data.tenantId;
+                    localStorage.setItem("hospitality_tenant_id", tenantId);
+                    document.getElementById("tenantIdInput").value = tenantId;
                 }
 
-                data.forEach(rest => {
-                    const card = document.createElement("div");
-                    card.className = "restaurant-card animate-fadeIn";
-                    card.onclick = () => openRestaurantMenu(rest.id);
+                // Update UI headers
+                document.getElementById("tenantBrandName").innerText = data.business_name || "Hospitality Hub";
+                
+                // Set default outlet preview if restaurants are found
+                const restaurants = data.restaurants || [];
+                if (restaurants.length > 0) {
+                    document.getElementById("currentOutletLabel").innerText = `Ordering from: ${restaurants[0].name}`;
+                    document.getElementById("outletChangeBtn").innerText = "Switch";
+                } else {
+                    document.getElementById("currentOutletLabel").innerText = "No branch selected";
+                    document.getElementById("outletChangeBtn").innerText = "Select";
+                }
 
-                    // Logo fallback to initial if no URL is provided
-                    const logoContent = rest.logo_url 
-                        ? `<img src="${rest.logo_url}" class="restaurant-logo" alt="${rest.name}">`
-                        : `<div class="restaurant-logo">${rest.name.charAt(0).toUpperCase()}</div>`;
-
-                    card.innerHTML = `
-                        ${logoContent}
-                        <div class="restaurant-info">
-                            <div class="restaurant-name">${rest.name}</div>
-                            <div class="restaurant-branch">${rest.branch?.name || "Main Branch"}</div>
-                            <div class="restaurant-tag">Takeaway & Delivery</div>
-                        </div>
-                    `;
-                    listContainer.appendChild(card);
-                });
-
+                // Render featured outlets
+                renderFeaturedOutlets();
             } catch (e) {
-                console.error("Failed to load restaurants:", e);
-                listContainer.innerHTML = `
-                    <div class="state-container">
-                        <span style="font-size: 32px;">🔌</span>
-                        <p style="color: #ef4444; font-size: 14px; font-weight: 600;">Could not connect to server</p>
-                        <p style="color: var(--text-muted); font-size: 12px; max-width: 250px;">Please check if the backend is running at http://${hostIp}:4000 or tap settings ⚙️ to change IP.</p>
+                console.error("Config fetch failed:", e);
+                showToast("Could not load latest server configuration", "🔌");
+                renderFeaturedOutlets();
+            }
+        }
+
+        // Render featured restaurants list on Home view
+        function renderFeaturedOutlets() {
+            const container = document.getElementById("featuredBranchContainer");
+            container.innerHTML = "";
+
+            const restaurants = appConfig.restaurants || [];
+            if (restaurants.length === 0) {
+                container.innerHTML = `
+                    <div class="state-container" style="background: var(--glass-bg); border-radius: 20px; border: 1px solid var(--glass-border); padding: 24px;">
+                        <span style="font-size: 24px;">🍽️</span>
+                        <p style="color: var(--text-muted); font-size: 13px;">No active dining branches found.</p>
                     </div>
                 `;
+                return;
+            }
+
+            restaurants.forEach(rest => {
+                const card = document.createElement("div");
+                card.className = "branch-card";
+                card.onclick = () => {
+                    openOutletMenu(rest.id, "TAKEAWAY");
+                };
+
+                const logo = rest.logo_url
+                    ? `<img src="${rest.logo_url}" class="branch-logo" alt="${rest.name}">`
+                    : `<div class="branch-logo">${rest.name.charAt(0).toUpperCase()}</div>`;
+
+                card.innerHTML = `
+                    ${logo}
+                    <div class="branch-details">
+                        <div class="branch-name">${rest.name}</div>
+                        <div class="branch-location">${rest.branch?.name || "Main Campus Outlet"}</div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Open branch selection globally
+        function openBranchSelectorGlobal() {
+            selectedService = "dine-in";
+            showBranchSelection();
+        }
+
+        // Start Service Selection Flow
+        function startServiceFlow(serviceId) {
+            selectedService = serviceId;
+            
+            if (serviceId === "dine-in" || serviceId === "takeaway") {
+                showBranchSelection();
+            } else if (serviceId === "delivery") {
+                showView("view-delivery-form");
             }
         }
 
-        // Open menu page inside WebView (no table id, takeaway/delivery/pre-order flow)
-        function openRestaurantMenu(restaurantId) {
-            window.location.href = `http://${hostIp}:3000/menu/${restaurantId}`;
-        }
+        // Render selection cards for specific selected service
+        function showBranchSelection() {
+            const titleElem = document.getElementById("branchSelectTitle");
+            titleElem.innerText = selectedService === "dine-in" ? "Select Table Branch" : "Select Takeaway Outlet";
+            
+            const grid = document.getElementById("branchesGrid");
+            grid.innerHTML = "";
 
-        // Trigger native scan code using MiniApp bridge SDK
-        async function triggerQrScan() {
-            try {
-                if (window.MiniApp && window.MiniApp.device && window.MiniApp.device.scanner) {
-                    const result = await window.MiniApp.device.scanner.scan();
-                    if (result) {
-                        // Scan result should be a URL like http://192.168.1.12:3000/menu/<restaurantId>?tableId=<tableId>
-                        if (result.startsWith("http://") || result.startsWith("https://")) {
-                            window.location.href = result;
-                        } else {
-                            alert("Scanned Code: " + result);
-                        }
-                    }
-                } else {
-                    // Fallback prompt for testing in browser without bridge SDK
-                    const result = prompt("Enter simulated table QR scan URL:", `http://${hostIp}:3000/menu/cm0k37a1f0003rwtzefg5g5a9?tableId=cm0k37a1f0003rwtzefg5g5a8`);
-                    if (result) {
-                        window.location.href = result;
-                    }
-                }
-            } catch (e) {
-                alert("QR Scanner Error: " + e.message);
+            const restaurants = appConfig.restaurants || [];
+            if (restaurants.length === 0) {
+                grid.innerHTML = `
+                    <div class="state-container">
+                        <p style="color: var(--text-muted);">No outlets available for this service.</p>
+                    </div>
+                `;
+                showView("view-branch-select");
+                return;
             }
+
+            restaurants.forEach(rest => {
+                const card = document.createElement("div");
+                card.className = "branch-card";
+                card.onclick = () => {
+                    openOutletMenu(rest.id, selectedService.toUpperCase());
+                };
+
+                const logo = rest.logo_url
+                    ? `<img src="${rest.logo_url}" class="branch-logo" alt="${rest.name}">`
+                    : `<div class="branch-logo">${rest.name.charAt(0).toUpperCase()}</div>`;
+
+                card.innerHTML = `
+                    ${logo}
+                    <div class="branch-details">
+                        <div class="branch-name">${rest.name}</div>
+                        <div class="branch-location">${rest.branch?.name || "Main Outlet"}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            showView("view-branch-select");
         }
 
-        // Initial load
-        window.addEventListener('load', loadRestaurants);
+        // Submit delivery form details and proceed
+        function submitDeliveryDetails() {
+            const name = document.getElementById("delivName").value.trim();
+            const phone = document.getElementById("delivPhone").value.trim();
+            const address = document.getElementById("delivAddress").value.trim();
+
+            if (!name || !phone || !address) {
+                showToast("Please fill all address fields!", "⚠️");
+                return;
+            }
+
+            // Save details to state/storage if needed
+            localStorage.setItem("customer_delivery_address", address);
+            
+            // Proceed to restaurant picker for delivery
+            showBranchSelection();
+        }
+
+        // Redirect to main NextJS menu view with corresponding context parameters
+        function openOutletMenu(restaurantId, orderType) {
+            let targetUrl = `http://${hostIp}:3000/menu/${restaurantId}?orderType=${orderType}`;
+            
+            if (orderType === "DELIVERY") {
+                const addr = localStorage.getItem("customer_delivery_address") || "";
+                targetUrl += `&deliveryAddress=${encodeURIComponent(addr)}`;
+            }
+
+            window.location.href = targetUrl;
+        }
+
+        // Load configuration on entry
+        window.addEventListener("load", loadConfigAndData);
     </script>
 </body>
 </html>
