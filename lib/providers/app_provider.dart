@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../services/auth_service.dart';
 import '../services/chat_service.dart';
 import '../models/auth_user.dart';
@@ -12,6 +13,7 @@ class AppProvider with ChangeNotifier {
   
   bool _isInitialized = false;
   bool _isLoading = true;
+  Position? _currentPosition;
 
   // Getters
   AuthService get authService => _authService;
@@ -23,6 +25,7 @@ class AppProvider with ChangeNotifier {
   List<ChatUser> get users => _chatService.users;
   List<ChatMessage> get messages => _chatService.messages;
   int get unreadCount => _chatService.getUnreadCount();
+  Position? get currentPosition => _currentPosition;
 
   // Initialize the app
   Future<void> initialize() async {
@@ -36,12 +39,43 @@ class AppProvider with ChangeNotifier {
       // Initialize chat service
       await _chatService.initialize();
 
+      // Fetch location if permissions already granted
+      await fetchLocation(requestPermission: false);
+
       _isInitialized = true;
     } catch (e) {
       print('Error initializing app: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Fetch device GPS location
+  Future<void> fetchLocation({bool requestPermission = false}) async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('Location services are disabled.');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied && requestPermission) {
+        permission = await Geolocator.requestPermission();
+      }
+      
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 5),
+        );
+        _currentPosition = position;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error fetching location: $e');
     }
   }
 

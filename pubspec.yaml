@@ -37,6 +37,7 @@ dependencies:
   webview_flutter: ^4.4.2
   miniapp_runtime_engine: ^1.0.0
   mobile_scanner: ^7.2.0
+  geolocator: ^14.0.2
  
 
 dev_dependencies:

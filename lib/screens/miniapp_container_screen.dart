@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import 'qr_scanner_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/mini_app.dart';
 import '../models/miniapp_config.dart';
 
@@ -93,12 +94,17 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
         try {
           Map<String, dynamic> data = {};
           try {
-            data = Map<String, dynamic>.from(
-              message.message.split(',').map((e) => e.trim()).toList().asMap().map((key, value) {
-                final parts = value.split(':');
-                return MapEntry(parts[0].trim(), parts.length > 1 ? parts[1].trim() : value);
-              })
-            );
+            final trimmed = message.message.trim();
+            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+              data = jsonDecode(trimmed) as Map<String, dynamic>;
+            } else {
+              data = Map<String, dynamic>.from(
+                trimmed.split(',').map((e) => e.trim()).toList().asMap().map((key, value) {
+                  final parts = value.split(':');
+                  return MapEntry(parts[0].trim(), parts.length > 1 ? parts[1].trim() : value);
+                })
+              );
+            }
           } catch (e) {
             data = {'message': message.message};
           }
@@ -150,12 +156,17 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
         try {
           Map<String, dynamic> data = {};
           try {
-            data = Map<String, dynamic>.from(
-              message.message.split(',').map((e) => e.trim()).toList().asMap().map((key, value) {
-                final parts = value.split(':');
-                return MapEntry(parts[0].trim(), parts.length > 1 ? parts[1].trim() : value);
-              })
-            );
+            final trimmed = message.message.trim();
+            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+              data = jsonDecode(trimmed) as Map<String, dynamic>;
+            } else {
+              data = Map<String, dynamic>.from(
+                trimmed.split(',').map((e) => e.trim()).toList().asMap().map((key, value) {
+                  final parts = value.split(':');
+                  return MapEntry(parts[0].trim(), parts.length > 1 ? parts[1].trim() : value);
+                })
+              );
+            }
           } catch (e) {
             data = {'message': message.message};
           }
@@ -280,6 +291,27 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
 
   void _injectMobileBridge() {
     const bridgeScript = '''
+      // Official MiniAppBridge mock for webview_flutter support
+      window.flutter_inappwebview = {
+        callHandler: function(handlerName, args) {
+          return new Promise(function(resolve, reject) {
+            var callbackId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
+            window['_resolve_' + callbackId] = function(res) {
+              resolve(res);
+            };
+            
+            // Post message to the channel
+            MiniAppNativeBridge.postMessage(JSON.stringify({
+              handler: handlerName,
+              id: args.id || callbackId,
+              method: args.method,
+              params: args.params || {},
+              callbackId: callbackId
+            }));
+          });
+        }
+      };
+      
       window.MiniAppBridge = {
         version: '1.0.0',
         postMessage: function(data) {
@@ -288,48 +320,41 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
         },
         auth: {
           login: function() {
-            return new Promise(function(resolve, reject) {
-              var callbackId = Date.now().toString();
-              window['_resolve_auth_' + callbackId] = resolve;
-              window['_reject_auth_' + callbackId] = reject;
-              window.MiniAppBridge.postMessage('type:auth_login,callbackId:' + callbackId);
-            });
+            return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "auth.login" })
+              .then(function(res) { return res.result; });
           },
           getProfile: function() {
-            return new Promise(function(resolve, reject) {
-              var callbackId = Date.now().toString();
-              window['_resolve_auth_profile_' + callbackId] = resolve;
-              window['_reject_auth_profile_' + callbackId] = reject;
-              window.MiniAppBridge.postMessage('type:auth_profile,callbackId:' + callbackId);
-            });
+            return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "auth.getProfile" })
+              .then(function(res) { return res.result; });
           }
         },
         storage: {
           setItem: function(key, value) {
-            localStorage.setItem('bridge_' + key, JSON.stringify(value));
-            return Promise.resolve(true);
+            return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "storage.setItem", params: { key: key, value: value } })
+              .then(function(res) { return res.result; });
           },
           getItem: function(key) {
-            const v = localStorage.getItem('bridge_' + key);
-            return Promise.resolve(v ? JSON.parse(v) : null);
+            return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "storage.getItem", params: { key: key } })
+              .then(function(res) { return res.result; });
           }
         },
         device: {
           scanner: {
             scan: function() {
-              return new Promise(function(resolve, reject) {
-                var callbackId = Date.now().toString();
-                window['_resolve_scan_' + callbackId] = resolve;
-                window['_reject_scan_' + callbackId] = reject;
-                window.MiniAppBridge.postMessage('type:scanner_scan,callbackId:' + callbackId);
-              });
+              return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "device.scanner.scan" })
+                .then(function(res) { return res.result; });
+            }
+          },
+          location: {
+            getLocation: function() {
+              return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "device.location.getCurrentPosition" })
+                .then(function(res) { return res.result; });
             }
           }
         },
         ui: {
           toast: function(msg) {
-            MiniAppNativeBridge.postMessage(JSON.stringify({type:'showToast',message:msg}));
-            return Promise.resolve();
+            return window.flutter_inappwebview.callHandler("MiniAppBridge", { method: "ui.toast", params: { message: msg } });
           }
         }
       };
@@ -340,6 +365,16 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
   }
 
   void _handleBridgeMessage(Map<String, dynamic> data) {
+    // If it's a JSON callHandler request from the SDK
+    final String? handler = data['handler'] as String?;
+    if (handler == 'MiniAppBridge') {
+      final callbackId = data['callbackId'] as String?;
+      final method = data['method'] as String?;
+      final params = data['params'] as Map<String, dynamic>? ?? {};
+      _handleSDKRequest(method, params, callbackId);
+      return;
+    }
+
     final type = data['type'] as String?;
     
     switch (type) {
@@ -365,6 +400,293 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
         break;
       default:
         print('🔗 Mobile Bridge: $type - ${data.toString()}');
+    }
+  }
+
+  void _handleSDKRequest(String? method, Map<String, dynamic> params, String? callbackId) {
+    if (callbackId == null) return;
+    
+    switch (method) {
+      case 'core.init':
+        _resolveSDK(callbackId, {
+          'instanceId': 'instance_${widget.app?.id ?? 'default'}',
+          'capabilities': [
+            'auth.profile',
+            'auth.token',
+            'storage.kv',
+            'device.location',
+            'device.scanner',
+            'ui.toast',
+            'ui.modal'
+          ]
+        });
+        break;
+        
+      case 'auth.getProfile':
+        _handleSDKGetProfile(callbackId);
+        break;
+        
+      case 'auth.getToken':
+        _resolveSDK(callbackId, {
+          'accessToken': 'sso_token_${Provider.of<AppProvider>(context, listen: false).currentUser?.id ?? 'guest'}'
+        });
+        break;
+        
+      case 'storage.setItem':
+        final key = params['key'] as String?;
+        final value = params['value'];
+        if (key != null) {
+          SharedPreferences.getInstance().then((prefs) {
+            prefs.setString('miniapp_${widget.app?.id ?? 'default'}_$key', value.toString());
+            _resolveSDK(callbackId, true);
+          });
+        } else {
+          _rejectSDK(callbackId, 'Missing key');
+        }
+        break;
+        
+      case 'storage.getItem':
+        final key = params['key'] as String?;
+        if (key != null) {
+          SharedPreferences.getInstance().then((prefs) {
+            final val = prefs.getString('miniapp_${widget.app?.id ?? 'default'}_$key');
+            _resolveSDK(callbackId, val);
+          });
+        } else {
+          _rejectSDK(callbackId, 'Missing key');
+        }
+        break;
+        
+      case 'storage.removeItem':
+        final key = params['key'] as String?;
+        if (key != null) {
+          SharedPreferences.getInstance().then((prefs) {
+            prefs.remove('miniapp_${widget.app?.id ?? 'default'}_$key');
+            _resolveSDK(callbackId, true);
+          });
+        } else {
+          _rejectSDK(callbackId, 'Missing key');
+        }
+        break;
+        
+      case 'storage.clear':
+        SharedPreferences.getInstance().then((prefs) {
+          final prefix = 'miniapp_${widget.app?.id ?? 'default'}_';
+          final keysToRemove = prefs.getKeys().where((k) => k.startsWith(prefix)).toList();
+          for (var k in keysToRemove) {
+            prefs.remove(k);
+          }
+          _resolveSDK(callbackId, true);
+        });
+        break;
+        
+      case 'device.location.getCurrentPosition':
+        _handleSDKGetLocation(callbackId);
+        break;
+        
+      case 'device.scanner.scan':
+        _handleSDKScan(callbackId);
+        break;
+        
+      case 'ui.toast':
+        final message = params['message'] as String?;
+        if (message != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+          _resolveSDK(callbackId, true);
+        } else {
+          _rejectSDK(callbackId, 'Missing message');
+        }
+        break;
+        
+      case 'ui.modal':
+        final title = params['title'] as String? ?? 'Alert';
+        final message = params['message'] as String? ?? '';
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _resolveSDK(callbackId, {'confirmed': true});
+                },
+                child: const Text('OK'),
+              )
+            ],
+          ),
+        );
+        break;
+        
+      default:
+        _rejectSDK(callbackId, 'Method not implemented: $method');
+    }
+  }
+
+  void _resolveSDK(String callbackId, dynamic result) {
+    final jsonResult = jsonEncode({'ok': true, 'result': result});
+    _controller.runJavaScript("window['_resolve_$callbackId']($jsonResult);");
+  }
+
+  void _rejectSDK(String callbackId, String errorMessage) {
+    final jsonResult = jsonEncode({'ok': false, 'error': errorMessage});
+    _controller.runJavaScript("window['_resolve_$callbackId']($jsonResult);");
+  }
+
+  void _handleSDKGetLocation(String callbackId) {
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.location_on, size: 48, color: Colors.green),
+              const SizedBox(height: 16),
+              Text(
+                '${widget.app?.name ?? "This Mini-App"} wants to access your location',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'This will share your real-time GPS location with the Mini-App to find nearby branches and deliver orders.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _rejectSDK(callbackId, 'User denied location permission');
+                      },
+                      child: const Text('Deny'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await appProvider.fetchLocation(requestPermission: true);
+                        final pos = appProvider.currentPosition;
+                        if (pos != null) {
+                          _resolveSDK(callbackId, {
+                            'coords': {
+                              'latitude': pos.latitude,
+                              'longitude': pos.longitude,
+                              'accuracy': pos.accuracy,
+                              'altitude': pos.altitude,
+                            },
+                            'timestamp': pos.timestamp.millisecondsSinceEpoch
+                          });
+                        } else {
+                          _rejectSDK(callbackId, 'Could not retrieve GPS coordinates.');
+                        }
+                      },
+                      child: const Text('Allow'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleSDKGetProfile(String callbackId) {
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final currentUser = appProvider.currentUser;
+
+    if (currentUser == null) {
+      _rejectSDK(callbackId, 'User is not logged into Host App');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.account_circle, size: 48, color: Colors.blue),
+              const SizedBox(height: 16),
+              Text(
+                '${widget.app?.name ?? "This Mini-App"} wants to access your profile',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'This will share your name (${currentUser.name}) and email (${currentUser.email}) with the Mini-App.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _rejectSDK(callbackId, 'User denied profile access');
+                      },
+                      child: const Text('Deny'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _resolveSDK(callbackId, {
+                          'id': currentUser.id,
+                          'displayName': currentUser.name,
+                          'email': currentUser.email,
+                          'avatarUrl': currentUser.avatar,
+                        });
+                      },
+                      child: const Text('Allow'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleSDKScan(String callbackId) async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => const QRScannerScreen()),
+    );
+
+    if (result != null) {
+      _resolveSDK(callbackId, {'result': result});
+    } else {
+      _rejectSDK(callbackId, 'Scan cancelled');
     }
   }
 

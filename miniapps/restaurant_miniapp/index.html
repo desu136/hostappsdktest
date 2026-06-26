@@ -204,16 +204,15 @@
         import { MiniApp } from '../node_modules/@ebisa-tesfaye/miniapp-sdk/index.js';
         window.MiniApp = MiniApp;
 
-        // Initialize SDK
         async function initSDK() {
             try {
                 await MiniApp.init({
                     appId: "com.echat.hospitality",
-                    permissions: ["device.scanner", "storage.read", "storage.write"]
+                    permissions: ["device.location", "auth.profile", "device.scanner", "storage.read", "storage.write"]
                 });
-                console.log("Launcher: SDK Initialized!");
+                console.log("Launcher: SDK Initialized with location + profile permissions.");
             } catch (e) {
-                console.warn("Launcher: SDK fallback mode.", e);
+                console.warn("Launcher: SDK init warning (may be in fallback mode):", e);
             }
         }
         document.addEventListener('DOMContentLoaded', initSDK);
@@ -224,7 +223,7 @@
         let hostIp = "192.168.1.8";
         let tenantId = "";
 
-        // Extract settings
+        // Extract settings from hostname
         if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             hostIp = window.location.hostname;
         }
@@ -251,6 +250,78 @@
         document.getElementById("serverIp").value = hostIp;
         document.getElementById("tenantId").value = tenantId;
 
+        // Try to get user profile from SDK Bridge
+        async function tryGetProfile() {
+            try {
+                const miniApp = window.MiniApp;
+                if (miniApp && miniApp.auth && typeof miniApp.auth.getProfile === 'function') {
+                    const profile = await miniApp.auth.getProfile();
+                    if (profile) {
+                        return {
+                            userId: profile.id || profile.userId || '',
+                            userName: profile.displayName || profile.name || '',
+                            userEmail: profile.email || '',
+                            userAvatar: profile.avatarUrl || profile.avatar || ''
+                        };
+                    }
+                }
+            } catch (e) {
+                console.warn("Launcher: Could not load user profile:", e);
+            }
+            // Fallback: use previously cached user data
+            const cached = localStorage.getItem('miniapp_cached_user');
+            if (cached) {
+                try {
+                    const u = JSON.parse(cached);
+                    return { userId: u.id || '', userName: u.name || '', userEmail: u.email || '', userAvatar: u.avatar || '' };
+                } catch { /* ignore */ }
+            }
+            return null;
+        }
+
+        // Try to get user GPS location from SDK Bridge or browser
+        async function tryGetLocation() {
+            try {
+                const miniApp = window.MiniApp;
+                if (miniApp && miniApp.device && miniApp.device.location && typeof miniApp.device.location.getCurrentPosition === 'function') {
+                    const pos = await miniApp.device.location.getCurrentPosition();
+                    if (pos && pos.coords) {
+                        return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    }
+                }
+            } catch (e) {
+                console.warn("Launcher: SDK location failed, trying browser:", e);
+            }
+            // Browser geolocation fallback (non-blocking: resolve after 4s timeout)
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) { resolve(null); return; }
+                const timer = setTimeout(() => resolve(null), 4000);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+                    () => { clearTimeout(timer); resolve(null); },
+                    { timeout: 3500, maximumAge: 60000 }
+                );
+            });
+        }
+
+        // Build target URL with profile & location params
+        function buildTargetUrl(baseUrl, profile, location) {
+            const params = new URLSearchParams({ hostIp, tenantId });
+
+            if (profile && profile.userId) {
+                params.set('userId', profile.userId);
+                params.set('userName', profile.userName);
+                if (profile.userEmail) params.set('userEmail', profile.userEmail);
+                if (profile.userAvatar) params.set('userAvatar', profile.userAvatar);
+            }
+            if (location) {
+                params.set('lat', String(location.lat));
+                params.set('lng', String(location.lng));
+            }
+
+            return `${baseUrl}/home?${params.toString()}`;
+        }
+
         // Validate and connect
         async function checkConnectionAndRedirect() {
             const spinner = document.getElementById("spinner");
@@ -260,31 +331,50 @@
 
             spinner.style.display = "block";
             form.classList.remove("active");
-            title.innerText = "Connecting to Hub...";
-            desc.innerText = `Connecting to Web Application at ${hostIp}:3000`;
+            title.innerText = "Launching...";
+            desc.innerText = `Connecting to portal at ${hostIp}:3000`;
 
-            const targetUrl = `http://${hostIp}:3000/home?hostIp=${hostIp}&tenantId=${tenantId}`;
+            const baseUrl = `http://${hostIp}:3000`;
 
             try {
-                // Ping Next.js server to ensure it is reachable before performing top-level redirect
+                // Ping Next.js server
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-                const res = await fetch(`http://${hostIp}:3000/favicon.ico`, { 
+                await fetch(`${baseUrl}/favicon.ico`, {
                     mode: 'no-cors',
                     signal: controller.signal
                 });
-                
                 clearTimeout(timeoutId);
-                
-                // Server is online, redirect
+
+                // Server reachable — now fetch profile & location in parallel
+                title.innerText = "Personalizing...";
+                desc.innerText = "Fetching your profile and location...";
+
+                const [profile, location] = await Promise.all([
+                    tryGetProfile(),
+                    tryGetLocation()
+                ]);
+
+                // Persist profile to localStorage as a local cache
+                if (profile && profile.userId) {
+                    localStorage.setItem('miniapp_cached_user', JSON.stringify({
+                        id: profile.userId,
+                        name: profile.userName,
+                        email: profile.userEmail,
+                        avatar: profile.userAvatar
+                    }));
+                }
+
+                const targetUrl = buildTargetUrl(baseUrl, profile, location);
+
                 title.innerText = "Redirecting...";
                 window.location.replace(targetUrl);
+
             } catch (e) {
                 console.warn("Target server is offline or unreachable:", e);
                 spinner.style.display = "none";
                 title.innerText = "Connection Unreachable";
-                desc.innerText = `Could not reach web server at ${hostIp}:3000. Verify the Server IP address and ensure the Next.js app is running.`;
+                desc.innerText = `Could not reach web server at ${hostIp}:3000. Verify the Server IP and ensure the Next.js app is running.`;
                 form.classList.add("active");
             }
         }
