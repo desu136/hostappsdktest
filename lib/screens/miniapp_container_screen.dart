@@ -617,64 +617,79 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
       return;
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.account_circle, size: 48, color: Colors.blue),
-              const SizedBox(height: 16),
-              Text(
-                '${widget.app?.name ?? "This Mini-App"} wants to access your profile',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'This will share your name (${currentUser.name}) and email (${currentUser.email}) with the Mini-App.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _rejectSDK(callbackId, 'User denied profile access');
-                      },
-                      child: const Text('Deny'),
+    final appId = widget.app?.id ?? 'default';
+    SharedPreferences.getInstance().then((prefs) {
+      final isGranted = prefs.getBool('miniapp_${appId}_profile_granted') ?? false;
+      if (isGranted) {
+        _resolveSDK(callbackId, {
+          'id': currentUser.id,
+          'displayName': currentUser.name,
+          'email': currentUser.email,
+          'avatarUrl': currentUser.avatar,
+        });
+        return;
+      }
+
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.account_circle, size: 48, color: Colors.blue),
+                const SizedBox(height: 16),
+                Text(
+                  '${widget.app?.name ?? "This Mini-App"} wants to access your profile',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'This will share your name (${currentUser.name}) and email (${currentUser.email}) with the Mini-App.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _rejectSDK(callbackId, 'User denied profile access');
+                        },
+                        child: const Text('Deny'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _resolveSDK(callbackId, {
-                          'id': currentUser.id,
-                          'displayName': currentUser.name,
-                          'email': currentUser.email,
-                          'avatarUrl': currentUser.avatar,
-                        });
-                      },
-                      child: const Text('Allow'),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          prefs.setBool('miniapp_${appId}_profile_granted', true);
+                          _resolveSDK(callbackId, {
+                            'id': currentUser.id,
+                            'displayName': currentUser.name,
+                            'email': currentUser.email,
+                            'avatarUrl': currentUser.avatar,
+                          });
+                        },
+                        child: const Text('Allow'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    });
   }
 
   Future<void> _handleSDKScan(String callbackId) async {
@@ -711,71 +726,89 @@ class _MiniAppContainerScreenState extends State<MiniAppContainerScreen> {
       return;
     }
 
-    _isAuthSheetShowing = true;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.security, size: 48, color: Colors.blue),
-              const SizedBox(height: 16),
-              Text(
-                '${widget.app?.name ?? "This Mini-App"} wants to access your account',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'This will share your Host App profile (${currentUser.name}) with the Mini-App. You will not need to enter a password.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        if (callbackId != null) {
-                          _controller.runJavaScript("window['_reject_auth_$callbackId'](new Error('User denied login permission'));");
-                        }
-                      },
-                      child: const Text('Deny'),
+    final appId = widget.app?.id ?? 'default';
+    SharedPreferences.getInstance().then((prefs) {
+      final isGranted = prefs.getBool('miniapp_${appId}_login_granted') ?? false;
+      if (isGranted) {
+        if (callbackId != null) {
+          final userJson = jsonEncode({
+            'id': currentUser.id,
+            'name': currentUser.name,
+            'email': currentUser.email,
+            'token': 'sso_token_${currentUser.id}'
+          });
+          _controller.runJavaScript("window['_resolve_auth_$callbackId']($userJson);");
+        }
+        return;
+      }
+
+      _isAuthSheetShowing = true;
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.security, size: 48, color: Colors.blue),
+                const SizedBox(height: 16),
+                Text(
+                  '${widget.app?.name ?? "This Mini-App"} wants to access your account',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'This will share your Host App profile (${currentUser.name}) with the Mini-App. You will not need to enter a password.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          if (callbackId != null) {
+                            _controller.runJavaScript("window['_reject_auth_$callbackId'](new Error('User denied login permission'));");
+                          }
+                        },
+                        child: const Text('Deny'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        if (callbackId != null) {
-                          final userJson = jsonEncode({
-                            'id': currentUser.id,
-                            'name': currentUser.name,
-                            'email': currentUser.email,
-                            'token': 'sso_token_${currentUser.id}'
-                          });
-                          _controller.runJavaScript("window['_resolve_auth_$callbackId']($userJson);");
-                        }
-                      },
-                      child: const Text('Allow'),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          prefs.setBool('miniapp_${appId}_login_granted', true);
+                          if (callbackId != null) {
+                            final userJson = jsonEncode({
+                              'id': currentUser.id,
+                              'name': currentUser.name,
+                              'email': currentUser.email,
+                              'token': 'sso_token_${currentUser.id}'
+                            });
+                            _controller.runJavaScript("window['_resolve_auth_$callbackId']($userJson);");
+                          }
+                        },
+                        child: const Text('Allow'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    ).then((_) {
-      _isAuthSheetShowing = false;
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ).then((_) {
+        _isAuthSheetShowing = false;
+      });
     });
   }
 
